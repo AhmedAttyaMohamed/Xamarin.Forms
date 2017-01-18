@@ -412,7 +412,43 @@ namespace Xamarin.Forms.Platform.iOS
 			PresentPopUp(window, alert, arguments);
 		}
 
-		static void PresentPopUp(UIWindow window, UIAlertController alert, ActionSheetArguments arguments = null)
+		UIPopoverController _popover;
+
+		void PresentPopover<T>(Popover<T> popover)
+		{
+			var renderer = Platform.GetRenderer(popover.View);
+
+			if(renderer == null)
+			{
+				renderer = Platform.CreateRenderer(popover.View);
+				if(renderer.ViewController == null)
+				{
+					var cp = new ContentPage{Content = popover.View};
+					renderer = Platform.CreateRenderer(cp);
+					Platform.SetRenderer(cp, renderer);
+				}
+				else
+				{
+					Platform.SetRenderer(popover.View, renderer);	
+				}
+			}
+
+			var wrapper = new ModalWrapper(renderer);
+
+			var nv = Platform.GetRenderer(Application.Current.MainPage).NativeView;
+
+			_popover = new UIPopoverController(wrapper);
+
+			_popover.DidDismiss += (sender, e) => {
+				System.Diagnostics.Debug.WriteLine("Dismissed");
+				popover.LightDismiss();
+				_popover = null;
+			};
+
+			_popover.PresentFromRect(new RectangleF(0, 0, 200, 200), nv, UIPopoverArrowDirection.Any, true);
+		}
+
+		static void PresentPopUp(UIWindow window, UIViewController alert, ActionSheetArguments arguments = null)
 		{
 			window.RootViewController = new UIViewController();
 			window.RootViewController.View.BackgroundColor = Color.Transparent.ToUIColor();
@@ -473,6 +509,12 @@ namespace Xamarin.Forms.Platform.iOS
 			// would be safe to dismiss the VC). Fortunately this is almost never an issue
 			await _renderer.PresentViewControllerAsync(wrapper, animated);
 			await Task.Delay(5);
+		}
+
+		public async Task<T> ShowPopover<T>(Popover<T> popover)
+		{
+			PresentPopover(popover);
+			return await popover.Result;
 		}
 
 		internal class DefaultRenderer : VisualElementRenderer<VisualElement>

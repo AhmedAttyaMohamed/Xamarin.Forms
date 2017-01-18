@@ -229,5 +229,14 @@ namespace Xamarin.Forms
 			list.RemoveAt(list.Count - 1);
 			return result;
 		}
+
+		public async Task<T> ShowPopover<T>(Popover<T> popover)
+		{
+			if(Inner != null){
+				return await Inner.ShowPopover(popover);
+			}
+
+			return await popover.Result; // This probably isn't right
+		}
 	}
 }

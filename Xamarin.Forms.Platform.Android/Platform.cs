@@ -1059,6 +1059,11 @@ namespace Xamarin.Forms.Platform.Android
 			return result;
 		}
 
+		public Task<T> ShowPopover<T>(Popover<T> popover)
+		{
+			throw new NotImplementedException();
+		}
+
 		bool _navAnimationInProgress;
 
 		internal bool NavAnimationInProgress
